@@ -1,0 +1,66 @@
+[flake8]
+exclude =
+  # Exclude directories we know to be safe for performance reasons
+  .git
+  .gitignore
+  build
+  docs
+  *apienv*
+  *venv*
+  .direnv
+  hacks
+  *__pycache__*
+  *.egg-info
+  # Exclude all non-python files for performance reasons
+  *.flake8
+  *.ini
+  *.json
+  *.md
+  *.txt
+  *.yaml
+
+# Require #coding: marker and only allow values defined here
+accept-encodings = utf-8
+
+# Ignoring:
+#   flake8[E203]: Whitespace before ':' - not pep8 compliant, conflicts with black formatter
+#   flake8[E501]: Line too long - picked up by flake8-length with different error
+#   flake8[W503]: Line break occurred before a binary operator
+#   flake8[W505]: Docstring too long - picked up by flake8-length with different error
+#   flake8-functions[CFQ002]: functions with more than 6 parameters
+#   flake8-logging-format[G004]: Logging statement uses f-string - prefer f strings in logging
+#   flake8-pie[PIE803]: Use lazy % formatting in logging functions - prefer f strings in logging
+#   flake8-simplify[SIM910]: Using .get(x, None) instead of just .get(x)
+#   flake8-noqa[NQA101-103]: Plugin can't be trusted to be accurate for these codes
+#   pydocstyle[D100-107]: Requiring docstrings for pkg/module/class/method etc.
+#   pydocstyle[D204]: 1 blank line required after class docstring
+extend-ignore = E203,E501,W503,W505,CFQ002,G004,PIE803,SIM910,NQA101,NQA102,NQA103,D100,D101,D102,D103,D104,D105,D106,D107,D204,INP001
+
+indent-size = 4
+
+# flake8-logging-format
+enable-extensions = G
+
+# flake8-import-order
+application-import-names = \
+    axial_api \
+    gyr
+
+import-order-style = smarkets
+
+# flake8 complexity (built in)
+max_complexity = 10
+
+# flake8-cognitive-complexity
+max-cognitive-complexity = 10
+
+# flake8-expression-complexity
+max-expression-complexity = 10
+
+# flake8-length
+max-line-length = 120
+
+###########################################################
+# enable globally for project
+filename =
+    */*.py
