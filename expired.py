@@ -3,7 +3,6 @@
 import argparse
 import csv
 import datetime
-import pprint
 from typing import Any, TypeAlias
 
 RowType: TypeAlias = dict[str, Any]
@@ -15,18 +14,13 @@ VisitType: TypeAlias = dict[str, list[VisitRow]]
 def normalize_name(*, name: str) -> str:
     # Names have extraneous white space SOMETIMES like "LAST , FIRST" - so remove spaces
     # ALso remove commas and periods
-    if name.startswith("XXBENDE"):
-        breakpoint()
     normalized_name = name.encode("latin-1", "ignore").decode("latin-1")
     normalized_name = normalized_name.replace(" ", "")
     normalized_name = normalized_name.replace(",", "")
-    normalized_name = normalized_name.replace(".", "")
-    if normalized_name.startswith("BENDE"):
-        print(f"{name=}, {normalized_name=}, normalized={[ord(x) for x in normalized_name]}")
-    return normalized_name
+    return normalized_name.replace(".", "")
 
 
-def read_prescription_sheet(*, fname: str) -> PrescriptionType:
+def read_prescription_sheet(*, fname: str) -> PrescriptionType:  # noqa: CCR001
     found_headers: bool = False
 
     prescription_data: PrescriptionType = {}
@@ -37,8 +31,8 @@ def read_prescription_sheet(*, fname: str) -> PrescriptionType:
             if "PATIENT NAME" in line[0].upper():
                 found_headers = True
                 continue
-            else:
-                continue
+            # Not found header yet, keep going
+            continue
 
         if line[0] == "":
             break
@@ -46,7 +40,9 @@ def read_prescription_sheet(*, fname: str) -> PrescriptionType:
         if line[2] == "0000-00-00":
             appt_date = "0000-00-00"
         else:
-            appt_date = datetime.datetime.strptime(line[2], "%Y-%m-%d").date()  # noqa: DTZ007
+            appt_date = datetime.datetime.strptime(  # noqa: DTZ007
+                line[2], "%Y-%m-%d"
+            ).date()
 
         normalized_name = normalize_name(name=line[0])
         prescription_data[normalized_name] = appt_date
@@ -59,14 +55,18 @@ def read_visit_sheet(*, fname: str) -> VisitType:
 
     headers: list[str] = []
 
-    for ct, line in enumerate(csv.reader(open(fname, "r", encoding="utf-8"))):  # noqa: SIM115
+    for ct, line in enumerate(
+        csv.reader(open(fname, "r", encoding="utf-8"))  # noqa: SIM115
+    ):
         line = [x.strip() for x in line]
         if ct == 0:
             headers = [x.upper() for x in line]
             continue
 
         row_dict: VisitRow = dict(zip(headers, line))
-        row_dict["APPOINTMENT DATE"] = datetime.datetime.strptime(row_dict["APPOINTMENT DATE"], "%m/%d/%Y").date()  # noqa: DTZ007
+        row_dict["APPOINTMENT DATE"] = datetime.datetime.strptime(  # noqa: DTZ007
+            row_dict["APPOINTMENT DATE"], "%m/%d/%Y"
+        ).date()
 
         # Noramlize the name to match prescription
         normalized_name = normalize_name(name=row_dict["PATIENT NAME"])
@@ -75,7 +75,9 @@ def read_visit_sheet(*, fname: str) -> VisitType:
     return visit_data
 
 
-def write_row(*, csv_fp: Any, match_name: str, end_date: datetime.date, visits: VisitRow) -> None:
+def write_row(
+    *, csv_fp: Any, match_name: str, end_date: datetime.date, visits: VisitRow
+) -> None:
     for visit in visits:
         csv_fp.writerow(
             [
@@ -101,9 +103,8 @@ def main() -> None:
 
     prescription_data = read_prescription_sheet(fname=args.prescription)
     visit_data = read_visit_sheet(fname=args.visit)
-    breakpoint()
 
-    today = datetime.datetime.now()  # noqa: DT007
+    today = datetime.datetime.now()  # noqa: DTZ005
     csv_name = f'expired_prescription_{today.strftime("%Y%m%d")}.csv'
     csv_fp = csv.writer(open(csv_name, "w", encoding="utf-8"))  # noqa: SIM115
     csv_fp.writerow(
@@ -125,7 +126,12 @@ def main() -> None:
         if match_name not in visit_data:
             continue
 
-        write_row(csv_fp=csv_fp, match_name=match_name, end_date=end_date, visits=visit_data[match_name])
+        write_row(
+            csv_fp=csv_fp,
+            match_name=match_name,
+            end_date=end_date,
+            visits=visit_data[match_name],
+        )
 
 
 if __name__ == "__main__":
